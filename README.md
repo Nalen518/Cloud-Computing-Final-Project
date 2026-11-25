@@ -36,8 +36,6 @@ evidence/    AWS screenshots and curl outputs (planned)
 
 ## Deployment plan
 
-Full click-by-click steps, with the screenshot each step produces: [docs/deployment-guide.md](docs/deployment-guide.md).
-
 1. Start the AWS Academy lab session and note the region.
 2. Create the DynamoDB table `SmallBusinessItems` (partition key `itemId`, String, on-demand).
 3. Create the Lambda function `items-handler` with `LabRole` and the table name as an environment variable.
