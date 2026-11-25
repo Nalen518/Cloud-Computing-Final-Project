@@ -30,7 +30,7 @@ README.md
 docs/        design brief and architecture diagram
 src/         Lambda handler (items_handler/lambda_function.py)
 tests/       local unit tests (python -m unittest discover -s tests)
-scripts/     table setup (create_table.sh) and API test script (planned)
+scripts/     table setup (create_table.sh) and API test (test_api.sh)
 evidence/    AWS screenshots and curl outputs (planned)
 ```
 
@@ -41,7 +41,7 @@ evidence/    AWS screenshots and curl outputs (planned)
 3. Create the Lambda function `items-handler` with `LabRole` and the table name as an environment variable.
 4. Create the REST API with `/items` and `/items/{itemId}`, the four methods, and Lambda proxy integration; deploy to a stage.
 5. Create an API key and a usage plan with throttling, and attach them to the stage.
-6. Call each endpoint with `curl` and save the outputs to `evidence/`.
+6. Run `scripts/test_api.sh` with `API_URL` and `API_KEY` set; it calls every endpoint and saves the outputs to `evidence/`.
 7. Confirm the requests appear in CloudWatch Logs.
 
 Estimated cost is about $0.01 at project scale; see the cost estimate in the [design brief](docs/design-brief.md).
@@ -52,5 +52,5 @@ Estimated cost is about $0.01 at project scale; see the cost estimate in the [de
 - [x] Architecture diagram
 - [x] DynamoDB table script
 - [x] Lambda handler (create, read, update, delete)
-- [ ] API test script
+- [x] API test script
 - [ ] AWS evidence
