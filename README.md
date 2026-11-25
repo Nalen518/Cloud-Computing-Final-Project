@@ -51,6 +51,6 @@ Estimated cost is about $0.01 at project scale; see the cost estimate in the [de
 - [x] Design brief
 - [x] Architecture diagram
 - [x] DynamoDB table script
-- [ ] Lambda handler (create and read done; update and delete next)
+- [x] Lambda handler (create, read, update, delete)
 - [ ] API test script
 - [ ] AWS evidence

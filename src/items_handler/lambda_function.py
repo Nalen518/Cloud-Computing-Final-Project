@@ -1,8 +1,10 @@
 """items-handler: one Lambda behind API Gateway (proxy integration) for the Item entity.
 
 Routes by HTTP method and resource path:
-  POST /items           create an item   -> 201
-  GET  /items/{itemId}  read one item    -> 200 / 404
+  POST   /items           create an item   -> 201 / 400
+  GET    /items/{itemId}  read one item    -> 200 / 404
+  PUT    /items/{itemId}  update an item   -> 200 / 400 / 404
+  DELETE /items/{itemId}  delete an item   -> 204 / 404
 """
 import json
 import os
@@ -86,6 +88,45 @@ def get_item(item_id):
     return response(200, item)
 
 
+def _not_found(exc):
+    # A failed "item must exist" condition means the itemId is unknown.
+    return getattr(exc, "response", {}).get("Error", {}).get("Code") == "ConditionalCheckFailedException"
+
+
+def update_item(event, item_id):
+    data, error = parse_body(event)
+    if error is None:
+        data, error = validate_item(data)
+    if error:
+        return response(400, {"message": error})
+    data["updatedAt"] = _now()
+    # "name" is a DynamoDB reserved word, so every field goes through #placeholders.
+    try:
+        result = table().update_item(
+            Key={"itemId": item_id},
+            UpdateExpression="SET " + ", ".join(f"#{k} = :{k}" for k in data),
+            ExpressionAttributeNames={f"#{k}": k for k in data},
+            ExpressionAttributeValues={f":{k}": v for k, v in data.items()},
+            ConditionExpression="attribute_exists(itemId)",
+            ReturnValues="ALL_NEW",
+        )
+    except Exception as exc:
+        if _not_found(exc):
+            return response(404, {"message": f"item {item_id} not found"})
+        raise
+    return response(200, result["Attributes"])
+
+
+def delete_item(item_id):
+    try:
+        table().delete_item(Key={"itemId": item_id}, ConditionExpression="attribute_exists(itemId)")
+    except Exception as exc:
+        if _not_found(exc):
+            return response(404, {"message": f"item {item_id} not found"})
+        raise
+    return response(204)
+
+
 def lambda_handler(event, context):
     method = event.get("httpMethod")
     resource = event.get("resource")
@@ -96,6 +137,10 @@ def lambda_handler(event, context):
             return create_item(event)
         if resource == "/items/{itemId}" and method == "GET":
             return get_item(item_id)
+        if resource == "/items/{itemId}" and method == "PUT":
+            return update_item(event, item_id)
+        if resource == "/items/{itemId}" and method == "DELETE":
+            return delete_item(item_id)
         return response(405, {"message": f"{method} {resource} is not supported"})
     except Exception as exc:  # log the detail to CloudWatch, return a generic 500
         print(f"ERROR {method} {resource}: {exc!r}")

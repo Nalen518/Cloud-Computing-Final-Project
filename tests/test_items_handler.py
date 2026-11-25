@@ -23,6 +23,28 @@ class FakeTable:
         item = self.items.get(Key["itemId"])
         return {"Item": dict(item)} if item else {}
 
+    def _require(self, key):
+        if key["itemId"] not in self.items:
+            raise ConditionFailed()
+
+    def update_item(self, Key, UpdateExpression, ExpressionAttributeNames, ExpressionAttributeValues,
+                    ConditionExpression, ReturnValues):
+        self._require(Key)
+        item = self.items[Key["itemId"]]
+        for placeholder, field in ExpressionAttributeNames.items():
+            value = ExpressionAttributeValues[":" + placeholder[1:]]
+            item[field] = Decimal(value) if isinstance(value, int) else value
+        return {"Attributes": dict(item)}
+
+    def delete_item(self, Key, ConditionExpression):
+        self._require(Key)
+        del self.items[Key["itemId"]]
+
+
+class ConditionFailed(Exception):
+    """Shaped like botocore's ClientError for a failed ConditionExpression."""
+    response = {"Error": {"Code": "ConditionalCheckFailedException"}}
+
 
 def event(method, resource, body=None, item_id=None):
     return {
@@ -54,6 +76,29 @@ class ItemsHandlerTest(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(read, created)  # Decimal comes back as a whole number
 
+    def test_full_crud_lifecycle(self):
+        _, created = self.call("POST", "/items", VALID)
+        item_id = created["itemId"]
+
+        status, updated = self.call("PUT", "/items/{itemId}", {**VALID, "quantity": 2}, item_id=item_id)
+        self.assertEqual(status, 200)
+        self.assertEqual(updated["quantity"], 2)
+        self.assertEqual(updated["createdAt"], created["createdAt"])
+        self.assertEqual(self.call("GET", "/items/{itemId}", item_id=item_id)[1], updated)
+
+        self.assertEqual(self.call("DELETE", "/items/{itemId}", item_id=item_id), (204, None))
+        self.assertEqual(self.call("GET", "/items/{itemId}", item_id=item_id)[0], 404)
+
+    def test_update_and_delete_unknown_are_404(self):
+        self.assertEqual(self.call("PUT", "/items/{itemId}", VALID, item_id="nope")[0], 404)
+        self.assertEqual(self.call("DELETE", "/items/{itemId}", item_id="nope")[0], 404)
+        self.assertEqual(h._table.items, {})  # the failed update did not create an item
+
+    def test_update_rejects_bad_input(self):
+        _, created = self.call("POST", "/items", VALID)
+        status = self.call("PUT", "/items/{itemId}", {**VALID, "quantity": -5}, item_id=created["itemId"])[0]
+        self.assertEqual(status, 400)
+
     def test_read_unknown_is_404(self):
         self.assertEqual(self.call("GET", "/items/{itemId}", item_id="nope")[0], 404)
 
@@ -77,6 +122,13 @@ class ItemsHandlerTest(unittest.TestCase):
 
     def test_unsupported_route_is_405(self):
         self.assertEqual(self.call("PATCH", "/items")[0], 405)
+
+    def test_unexpected_error_is_500(self):
+        class Broken:
+            def get_item(self, Key):
+                raise RuntimeError("boom")
+        h._table = Broken()
+        self.assertEqual(self.call("GET", "/items/{itemId}", item_id="x")[0], 500)
 
 
 if __name__ == "__main__":
