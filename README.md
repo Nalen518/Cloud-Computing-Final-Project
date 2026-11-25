@@ -28,8 +28,9 @@ Full request and response details are in the [design brief](docs/design-brief.md
 ```
 README.md
 docs/        design brief and architecture diagram
-src/         Lambda handler (planned)
-scripts/     table setup and API test scripts (planned)
+src/         Lambda handler (items_handler/lambda_function.py)
+tests/       local unit tests (python -m unittest discover -s tests)
+scripts/     table setup (create_table.sh) and API test script (planned)
 evidence/    AWS screenshots and curl outputs (planned)
 ```
 
@@ -49,7 +50,7 @@ Estimated cost is about $0.01 at project scale; see the cost estimate in the [de
 
 - [x] Design brief
 - [x] Architecture diagram
-- [ ] DynamoDB table script
-- [ ] Lambda handler
+- [x] DynamoDB table script
+- [ ] Lambda handler (create and read done; update and delete next)
 - [ ] API test script
 - [ ] AWS evidence

@@ -5,3 +5,6 @@
 # secrets and local AWS config
 .env
 .aws/
+
+# Python
+__pycache__/
