@@ -1,0 +1,7 @@
+# draw.io desktop backups
+*.bkp
+.$*
+
+# secrets and local AWS config
+.env
+.aws/
