@@ -8,9 +8,9 @@ AWS Cloud Computing individual project. A minimal serverless API that lets a sma
 
 ## Architecture
 
-![Architecture diagram](docs/architecture.svg)
+![Architecture diagram](docs/architecture.drawio.png)
 
-A client calls API Gateway over HTTPS with an API key. API Gateway invokes one Lambda function (`items-handler`), which reads and writes the DynamoDB table. Lambda runs as the lab's preset `LabRole` and writes logs to CloudWatch. The editable source is [docs/architecture.drawio](docs/architecture.drawio).
+A client calls API Gateway over HTTPS with an API key. API Gateway invokes one Lambda function (`items-handler`), which reads and writes the DynamoDB table. Lambda runs as the lab's preset `LabRole` and writes logs to CloudWatch. The PNG has the draw.io diagram embedded, so it can be opened and edited directly in draw.io.
 
 ## CRUD endpoints
 

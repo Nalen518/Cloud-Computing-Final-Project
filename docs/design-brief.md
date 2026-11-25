@@ -72,7 +72,7 @@ Four endpoints cover create, read, update and delete for `Item`, all under the `
 
 A client calls API Gateway over HTTPS, which invokes one Lambda function that reads and writes a DynamoDB table, all under the existing LabRole and with no VPC.
 
-![Architecture: client, API Gateway, Lambda, DynamoDB, with LabRole and CloudWatch Logs](architecture.svg)
+![Architecture: client, API Gateway, Lambda, DynamoDB, with LabRole and CloudWatch Logs](architecture.drawio.png)
 
 Each request follows the solid arrows left to right and returns the same way; the dashed arrows show the role Lambda runs as and the logs it writes.
 
