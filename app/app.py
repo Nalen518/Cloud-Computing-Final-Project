@@ -43,6 +43,7 @@ def to_json(row):
     return {
         "itemId": row["item_id"],
         "name": row["name"],
+        "folder": row["folder"],
         "quantity": row["quantity"],
         "unit": row["unit"],
         "reorderLevel": row["reorder_level"],
@@ -83,9 +84,9 @@ def create_item():
     item_id, ts = str(uuid.uuid4()), now()
     with db() as conn, conn.cursor() as cur:
         cur.execute(
-            "INSERT INTO items (item_id, name, quantity, unit, reorder_level, created_at, updated_at)"
-            " VALUES (%s, %s, %s, %s, %s, %s, %s)",
-            (item_id, data["name"], data["quantity"], data["unit"], data["reorderLevel"], ts, ts),
+            "INSERT INTO items (item_id, name, folder, quantity, unit, reorder_level, created_at, updated_at)"
+            " VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+            (item_id, data["name"], data["folder"], data["quantity"], data["unit"], data["reorderLevel"], ts, ts),
         )
         return jsonify(to_json(fetch(cur, item_id))), 201
 
@@ -115,9 +116,9 @@ def update_item(item_id):
         return error
     with db() as conn, conn.cursor() as cur:
         matched = cur.execute(
-            "UPDATE items SET name = %s, quantity = %s, unit = %s, reorder_level = %s, updated_at = %s"
+            "UPDATE items SET name = %s, folder = %s, quantity = %s, unit = %s, reorder_level = %s, updated_at = %s"
             " WHERE item_id = %s",
-            (data["name"], data["quantity"], data["unit"], data["reorderLevel"], now(), item_id),
+            (data["name"], data["folder"], data["quantity"], data["unit"], data["reorderLevel"], now(), item_id),
         )
         if not matched:
             return not_found(item_id)

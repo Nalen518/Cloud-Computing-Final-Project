@@ -1,6 +1,8 @@
 """Input validation for the Item entity (no Flask or database imports, so it unit-tests anywhere)."""
 
 TEXT_LIMITS = {"name": 100, "unit": 20}  # match the VARCHAR sizes in db/init.sql
+FOLDER_LIMIT = 50
+DEFAULT_FOLDER = "Unsorted"
 MAX_INT = 4294967295  # MySQL INT UNSIGNED
 
 
@@ -22,4 +24,10 @@ def validate_item(data):
         if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= MAX_INT:
             return None, f"'{field}' is required and must be a whole number, 0 or more"
         clean[field] = value
+    folder = data.get("folder")
+    if folder is None or (isinstance(folder, str) and not folder.strip()):
+        folder = DEFAULT_FOLDER
+    if not isinstance(folder, str) or len(folder.strip()) > FOLDER_LIMIT:
+        return None, f"'folder' must be text of at most {FOLDER_LIMIT} characters"
+    clean["folder"] = folder.strip()
     return clean, None

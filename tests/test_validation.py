@@ -16,7 +16,11 @@ class ValidateItemTest(unittest.TestCase):
     def test_valid_item_is_cleaned(self):
         clean, error = validate_item({**VALID, "name": "  Rice 5kg "})
         self.assertIsNone(error)
-        self.assertEqual(clean, VALID)
+        self.assertEqual(clean, {**VALID, "folder": "Unsorted"})
+
+    def test_folder_is_kept_or_defaulted(self):
+        self.assertEqual(validate_item({**VALID, "folder": " Kitchen "})[0]["folder"], "Kitchen")
+        self.assertEqual(validate_item({**VALID, "folder": ""})[0]["folder"], "Unsorted")
 
     def test_zero_is_allowed(self):
         self.assertIsNone(validate_item({**VALID, "quantity": 0, "reorderLevel": 0})[1])
@@ -34,6 +38,8 @@ class ValidateItemTest(unittest.TestCase):
             {**VALID, "quantity": "3"},
             {**VALID, "quantity": 2**32},
             {**VALID, "reorderLevel": True},
+            {**VALID, "folder": 7},
+            {**VALID, "folder": "x" * 51},
             {k: v for k, v in VALID.items() if k != "quantity"},
         ]
         for body in bad:
