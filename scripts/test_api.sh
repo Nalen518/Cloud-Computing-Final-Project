@@ -28,7 +28,7 @@ call() {
 
   echo "\$ curl -X $method $path${body:+ -d '$body'}"
   echo "HTTP $STATUS (expected $expected) $result"
-  echo "${BODY:-<no body>}"
+  echo "${BODY:0:300}"; [ -n "$BODY" ] || echo "<no body>"
   echo
 }
 
@@ -44,6 +44,12 @@ call() {
   call 201 POST /items '{"name":"Rice 5kg","quantity":12,"unit":"bag","reorderLevel":3}'
   ITEM_ID=$(printf '%s' "$BODY" | sed -n 's/.*"itemId": *"\([^"]*\)".*/\1/p')
   [ -n "$ITEM_ID" ] || ITEM_ID="missing-item-id"
+
+  echo "== List (low stock only) =="
+  call 200 GET "/items?lowStock=true"
+
+  echo "== Web page =="
+  call 200 GET /
 
   echo "== Read =="
   call 200 GET "/items/$ITEM_ID"
