@@ -1,16 +1,19 @@
-# Small Business Stock Tracker (Track C: Serverless)
+# Small Business Stock Tracker (Track B: Containers)
 
-AWS Cloud Computing individual project. A minimal serverless API that lets a small business owner create, read, update and delete stock items, each with a quantity and a reorder level.
+AWS Cloud Computing individual project. A small REST API that lets a small business owner create, read, update and delete stock items, each with a quantity and a reorder level.
 
-- **Track:** C, Serverless (API Gateway + Lambda + DynamoDB)
-- **Entity:** `Item` (one DynamoDB table, `SmallBusinessItems`)
-- **Environment:** AWS Academy lab account (Lab Project: Microservices and CI/CD Pipeline Builder)
+- **Track:** B, Containers (EC2 + Docker + ECR)
+- **Entity:** `Item` (one MySQL table, `items`)
+- **Environment:** AWS Academy lab account (Lab Project: Microservices and CI/CD Pipeline Builder), region `us-east-1`
 
-## Architecture
+## Services
 
-![Architecture diagram](docs/architecture.drawio.png)
+| Service | Image | Role |
+| --- | --- | --- |
+| `api` | Built from [`app/`](app/) (Python, Flask, gunicorn), pushed to Amazon ECR as `items-api` | REST API on port 80 |
+| `db` | Official `mysql:8.4` | Stores the `items` table in a Docker volume; not exposed outside the Docker network |
 
-A client calls API Gateway over HTTPS with an API key. API Gateway invokes one Lambda function (`items-handler`), which reads and writes the DynamoDB table. Lambda runs as the lab's preset `LabRole` and writes logs to CloudWatch. The PNG has the draw.io diagram embedded, so it can be opened and edited directly in draw.io.
+Both run on one EC2 instance with Docker Compose ([`docker-compose.yml`](docker-compose.yml)).
 
 ## CRUD endpoints
 
@@ -21,36 +24,43 @@ A client calls API Gateway over HTTPS with an API key. API Gateway invokes one L
 | Update | `PUT /items/{itemId}` | `200` | `400`, `404` |
 | Delete | `DELETE /items/{itemId}` | `204` | `404` |
 
-Full request and response details are in the [design brief](docs/design-brief.md).
+`GET /health` returns `200` for connectivity checks. Full details are in the [design brief](docs/design-brief.md).
+
+## Run locally
+
+Needs Docker Desktop.
+
+```powershell
+copy .env.example .env      # then change the passwords in .env
+docker compose up -d --build
+```
+
+Then, in Git Bash:
+
+```bash
+API_URL=http://localhost bash scripts/test_api.sh   # expects 9 passed, 0 failed
+python -m unittest discover -s tests                # validation unit tests
+docker compose down
+```
 
 ## Repository layout
 
 ```
 README.md
-docs/        design brief and architecture diagram
-src/         Lambda handler (items_handler/lambda_function.py)
-tests/       local unit tests (python -m unittest discover -s tests)
-scripts/     table setup (create_table.sh) and API test (test_api.sh)
-evidence/    AWS screenshots and curl outputs (planned)
+docker-compose.yml   the two services
+.env.example         settings template (copy to .env, never commit .env)
+app/                 items-api: app.py, validation.py, Dockerfile, requirements.txt
+db/init.sql          creates the items table on first start
+tests/               validation unit tests
+scripts/test_api.sh  end-to-end API test, saves output to evidence/
+docs/                design brief and architecture diagram
+evidence/            AWS screenshots and test outputs
 ```
-
-## Deployment plan
-
-1. Start the AWS Academy lab session and note the region.
-2. Create the DynamoDB table `SmallBusinessItems` (partition key `itemId`, String, on-demand).
-3. Create the Lambda function `items-handler` with `LabRole` and the table name as an environment variable.
-4. Create the REST API with `/items` and `/items/{itemId}`, the four methods, and Lambda proxy integration; deploy to a stage.
-5. Create an API key and a usage plan with throttling, and attach them to the stage.
-6. Run `scripts/test_api.sh` with `API_URL` and `API_KEY` set; it calls every endpoint and saves the outputs to `evidence/`.
-7. Confirm the requests appear in CloudWatch Logs.
-
-Estimated cost is about $0.01 at project scale; see the cost estimate in the [design brief](docs/design-brief.md).
 
 ## Status
 
-- [x] Design brief
-- [x] Architecture diagram
-- [x] DynamoDB table script
-- [x] Lambda handler (create, read, update, delete)
-- [x] API test script
+- [x] Use case and data entity
+- [x] API image, Docker Compose, tests (passing locally: 9/9 API checks)
+- [ ] Design brief and diagram updated for Track B
+- [ ] Deployed to EC2 with the image in ECR
 - [ ] AWS evidence
