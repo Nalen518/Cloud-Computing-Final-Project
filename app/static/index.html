@@ -6,103 +6,184 @@
 <title>Stock Tracker</title>
 <style>
   :root {
-    --ink: #1f2933; --muted: #616e7c; --line: #e4e7eb; --bg: #f5f7fa; --card: #fff;
-    --brand: #0b6e4f; --brand-ink: #fff; --low: #b42318; --low-bg: #fef3f2; --ok: #067647; --ok-bg: #ecfdf3;
+    --ink: #17201c; --muted: #5d6b65; --faint: #8a9690; --line: #e3e8e5; --bg: #f6f8f7; --card: #fff;
+    --side: #15231e; --side-ink: #d5e0db; --side-muted: #84968e; --side-hover: #213730; --side-active: #2a463c;
+    --brand: #0f6b4f; --brand-ink: #fff; --low: #a8321f; --low-bg: #fdf0ec; --warn: #b7791f; --ok: #1d7a52;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
-  header { background: var(--brand); color: var(--brand-ink); padding: 20px 24px; }
-  header h1 { margin: 0; font-size: 22px; }
-  header p { margin: 4px 0 0; opacity: .85; font-size: 14px; }
-  main { max-width: 1000px; margin: 0 auto; padding: 24px; }
-  .stats { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; min-width: 150px; }
-  .stat b { display: block; font-size: 24px; }
-  .stat span { color: var(--muted); font-size: 13px; }
-  .stat.low b { color: var(--low); }
-  .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
-  button { font: inherit; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); padding: 8px 14px; cursor: pointer; }
-  button:hover { border-color: var(--muted); }
-  button.primary { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
-  button.danger { color: var(--low); }
-  button:focus-visible, input:focus-visible { outline: 3px solid #84caff; outline-offset: 1px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-  th { font-size: 13px; color: var(--muted); font-weight: 600; }
-  tr:last-child td { border-bottom: 0; }
-  td.num { font-variant-numeric: tabular-nums; }
-  td.actions { text-align: right; }
-  td.actions button { padding: 4px 10px; margin-left: 4px; }
-  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
-  .badge.low { color: var(--low); background: var(--low-bg); }
-  .badge.ok { color: var(--ok); background: var(--ok-bg); }
-  .empty { padding: 32px; text-align: center; color: var(--muted); }
-  .msg { min-height: 24px; margin: 8px 0; font-size: 14px; }
-  .msg.error { color: var(--low); }
-  dialog { border: 0; border-radius: 12px; padding: 24px; width: min(420px, 92vw); box-shadow: 0 20px 50px rgba(0,0,0,.25); }
-  dialog::backdrop { background: rgba(15, 23, 42, .45); }
-  dialog h2 { margin: 0 0 16px; font-size: 18px; }
-  label { display: block; font-size: 13px; font-weight: 600; margin: 12px 0 4px; }
-  input { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
-  label.toggle { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-weight: 500; font-size: 14px; }
-  label.toggle input { width: auto; }
+  html, body { height: 100%; }
+  body { margin: 0; font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid #5aa9e6; outline-offset: 2px; }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  .app { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+
+  /* Sidebar: views and folders */
+  .sidebar { background: var(--side); color: var(--side-ink); padding: 18px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .brand { font-weight: 700; font-size: 16px; color: #fff; padding: 2px 10px 16px; letter-spacing: .2px; }
+  .brand small { display: block; font-weight: 400; font-size: 12px; color: var(--side-muted); letter-spacing: 0; }
+  .side-label { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--side-muted); padding: 16px 10px 6px; }
+  .nav { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: none; color: var(--side-ink); padding: 7px 10px; border-radius: 6px; text-align: left; }
+  .nav:hover { background: var(--side-hover); }
+  .nav[aria-current="true"] { background: var(--side-active); color: #fff; }
+  .nav .label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nav .count { font-size: 12px; color: var(--side-muted); font-variant-numeric: tabular-nums; }
+  .nav .count.alert { color: #f2a48f; }
+  .folder-icon { width: 14px; height: 11px; border: 1.5px solid currentColor; border-radius: 2px; position: relative; opacity: .8; flex: none; }
+  .folder-icon::before { content: ""; position: absolute; top: -4px; left: -1.5px; width: 6px; height: 3px; border: 1.5px solid currentColor; border-bottom: 0; border-radius: 2px 2px 0 0; }
+  .side-note { margin-top: auto; font-size: 12px; color: var(--side-muted); padding: 10px; }
+
+  /* Main area */
+  .main { display: flex; flex-direction: column; min-width: 0; }
+  .topbar { display: flex; align-items: center; gap: 12px; padding: 14px 24px; background: var(--card); border-bottom: 1px solid var(--line); }
+  .crumbs { flex: 1; font-size: 15px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .crumbs b { color: var(--ink); font-weight: 600; }
+  .search { width: 240px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+  .btn { border: 1px solid var(--line); background: var(--card); padding: 7px 12px; border-radius: 6px; }
+  .btn:hover { border-color: var(--faint); }
+  .btn.primary { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); font-weight: 600; }
+  .btn.danger { color: var(--low); }
+
+  .summary { display: flex; gap: 28px; padding: 12px 24px; border-bottom: 1px solid var(--line); background: var(--card); font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+  .summary b { color: var(--ink); font-variant-numeric: tabular-nums; margin-left: 4px; }
+  .summary .low b { color: var(--low); }
+
+  .content { display: grid; grid-template-columns: 1fr; flex: 1; min-height: 0; }
+  .content.has-detail { grid-template-columns: 1fr 340px; }
+  .list { list-style: none; margin: 0; padding: 12px 24px 32px; }
+  .row { display: grid; grid-template-columns: 40px 1fr 130px 110px; align-items: center; gap: 14px; width: 100%; padding: 10px 12px; margin-bottom: 6px; background: var(--card); border: 1px solid var(--line); border-radius: 8px; text-align: left; }
+  .row:hover { border-color: #c5cfca; }
+  .row[aria-current="true"] { border-color: var(--brand); box-shadow: inset 3px 0 0 var(--brand); }
+  .thumb { width: 40px; height: 40px; border-radius: 6px; display: grid; place-items: center; font-weight: 700; font-size: 15px; }
+  .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sub { font-size: 12px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .qty { font-variant-numeric: tabular-nums; }
+  .qty small { color: var(--faint); }
+  .status { font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+  .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .status.low { color: var(--low); }
+  .status.ok { color: var(--ok); }
+  .empty { margin: 40px 24px; text-align: center; color: var(--muted); }
+  .msg { padding: 0 24px; min-height: 0; color: var(--muted); font-size: 13px; }
+  .msg:not(:empty) { padding-top: 10px; }
+  .msg.error { color: var(--low); }
+
+  /* Detail panel */
+  .detail { border-left: 1px solid var(--line); background: var(--card); padding: 20px; overflow-y: auto; }
+  .detail-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+  .detail .thumb { width: 56px; height: 56px; font-size: 20px; border-radius: 8px; }
+  .detail h2 { margin: 14px 0 2px; font-size: 18px; word-break: break-word; }
+  .detail .sub { white-space: normal; }
+  .close { border: 0; background: none; font-size: 20px; line-height: 1; color: var(--muted); padding: 4px 8px; border-radius: 6px; }
+  .close:hover { background: var(--bg); }
+  .stock { margin: 18px 0; padding: 14px; border: 1px solid var(--line); border-radius: 8px; }
+  .stock-label { font-size: 12px; color: var(--muted); }
+  .stock-row { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+  .stock-value { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stock-value small { font-size: 14px; font-weight: 400; color: var(--muted); }
+  .stepper { display: flex; gap: 6px; }
+  .stepper button { width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); font-size: 18px; }
+  .stepper button:hover { border-color: var(--faint); }
+  .stock .hint { font-size: 12px; margin-top: 8px; }
+  .fields { display: grid; grid-template-columns: 110px 1fr; gap: 8px 12px; margin: 0; font-size: 13px; }
+  .fields dt { color: var(--muted); }
+  .fields dd { margin: 0; word-break: break-all; }
+  .detail-actions { display: flex; gap: 8px; margin-top: 20px; }
+
+  /* Form */
+  dialog { border: 0; border-radius: 10px; padding: 22px; width: min(440px, 94vw); box-shadow: 0 18px 50px rgba(0,0,0,.25); }
+  dialog::backdrop { background: rgba(10, 20, 16, .45); }
+  dialog h2 { margin: 0 0 14px; font-size: 17px; }
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin: 12px 0 4px; }
+  dialog input { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-msg { color: var(--low); font-size: 13px; min-height: 18px; margin: 10px 0 0; }
+  .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+  @media (max-width: 860px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { flex-direction: row; overflow-x: auto; padding: 10px; gap: 6px; }
+    .brand, .side-label, .side-note { display: none; }
+    .nav { width: auto; white-space: nowrap; }
+    .topbar { flex-wrap: wrap; padding: 12px 16px; }
+    .search { width: 100%; order: 3; }
+    .summary, .list { padding-left: 16px; padding-right: 16px; }
+    .row { grid-template-columns: 40px 1fr 90px; }
+    .row .status { display: none; }
+    .content.has-detail { grid-template-columns: 1fr; }
+    .detail { position: fixed; inset: 0; z-index: 5; border: 0; }
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1>Stock Tracker</h1>
-  <p>Know what you hold and when to reorder.</p>
-</header>
-<main>
-  <div class="stats">
-    <div class="stat"><b id="stat-total">–</b><span>Items tracked</span></div>
-    <div class="stat low"><b id="stat-low">–</b><span>At or below reorder level</span></div>
-  </div>
+<div class="app">
+  <nav class="sidebar" aria-label="Views and folders">
+    <div class="brand">Stock Tracker<small>Small business inventory</small></div>
+    <button class="nav" data-view="all"><span class="label">All items</span><span class="count" id="count-all">0</span></button>
+    <button class="nav" data-view="low"><span class="label">Low stock</span><span class="count alert" id="count-low">0</span></button>
+    <div class="side-label">Folders</div>
+    <div id="folders"></div>
+    <p class="side-note">A folder appears when you add an item to it.</p>
+  </nav>
 
-  <div class="toolbar">
-    <label class="toggle"><input type="checkbox" id="low-only"> Show low stock only</label>
-    <button class="primary" id="add-btn" type="button">+ Add item</button>
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs" id="crumbs"></div>
+      <label class="sr-only" for="search">Search items</label>
+      <input class="search" id="search" type="search" placeholder="Search items">
+      <button class="btn primary" id="add-btn" type="button">Add item</button>
+    </div>
+    <div class="summary" aria-label="Summary">
+      <span>Folders<b id="sum-folders">0</b></span>
+      <span>Items<b id="sum-items">0</b></span>
+      <span>Total quantity<b id="sum-qty">0</b></span>
+      <span class="low">Need reorder<b id="sum-low">0</b></span>
+    </div>
+    <p class="msg" id="msg" role="status" aria-live="polite"></p>
+    <div class="content" id="content">
+      <section aria-label="Items">
+        <ul class="list" id="list"></ul>
+        <p class="empty" id="empty" hidden></p>
+      </section>
+      <aside class="detail" id="detail" hidden aria-label="Item details"></aside>
+    </div>
   </div>
-
-  <p class="msg" id="msg" role="status" aria-live="polite"></p>
-
-  <div class="card">
-    <table>
-      <thead>
-        <tr><th scope="col">Item</th><th scope="col">Quantity</th><th scope="col">Reorder level</th><th scope="col">Status</th><th scope="col">Last updated</th><th scope="col"><span class="sr-only">Actions</span></th></tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
-    <div class="empty" id="empty" hidden>No items yet. Click “Add item” to start.</div>
-  </div>
-</main>
+</div>
 
 <dialog id="dialog" aria-labelledby="dialog-title">
-  <form id="form" method="dialog" novalidate>
+  <form id="form" novalidate>
     <h2 id="dialog-title">Add item</h2>
     <label for="f-name">Name</label>
-    <input id="f-name" name="name" maxlength="100" required>
-    <div class="row">
-      <div><label for="f-quantity">Quantity</label><input id="f-quantity" name="quantity" type="number" min="0" step="1" required></div>
-      <div><label for="f-unit">Unit</label><input id="f-unit" name="unit" maxlength="20" placeholder="pcs, kg, box" required></div>
+    <input id="f-name" maxlength="100" required>
+    <label for="f-folder">Folder</label>
+    <input id="f-folder" maxlength="50" list="folder-options" placeholder="e.g. Kitchen, Drinks, Packaging">
+    <datalist id="folder-options"></datalist>
+    <div class="two">
+      <div><label for="f-quantity">Quantity</label><input id="f-quantity" type="number" min="0" step="1" required></div>
+      <div><label for="f-unit">Unit</label><input id="f-unit" maxlength="20" placeholder="pcs, kg, box" required></div>
     </div>
     <label for="f-reorder">Reorder level</label>
-    <input id="f-reorder" name="reorderLevel" type="number" min="0" step="1" required>
-    <p class="msg error" id="form-msg" role="alert"></p>
-    <div class="dialog-actions">
-      <button type="button" id="cancel-btn">Cancel</button>
-      <button type="submit" class="primary">Save</button>
+    <input id="f-reorder" type="number" min="0" step="1" required>
+    <p class="form-msg" id="form-msg" role="alert"></p>
+    <div class="form-actions">
+      <button class="btn" type="button" id="cancel-btn">Cancel</button>
+      <button class="btn primary" type="submit">Save</button>
     </div>
   </form>
 </dialog>
 
 <script>
 const $ = (id) => document.getElementById(id);
-let editingId = null;
+const state = { items: [], view: { type: "all" }, query: "", selectedId: null, editingId: null };
+
+// Item names, folders and units are user input: always set them with textContent, never innerHTML.
+function el(tag, props = {}, ...children) {
+  const node = Object.assign(document.createElement(tag), props);
+  node.append(...children);
+  return node;
+}
 
 async function api(method, path, body) {
   const res = await fetch(path, {
@@ -115,71 +196,172 @@ async function api(method, path, body) {
   return data;
 }
 
-function showMessage(text, isError = false) {
+const isLow = (item) => item.quantity <= item.reorderLevel;
+const toBody = (item) => ({ name: item.name, folder: item.folder, quantity: item.quantity, unit: item.unit, reorderLevel: item.reorderLevel });
+
+function thumb(name) {
+  let hash = 0;
+  for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) % 360;
+  return el("span", {
+    className: "thumb",
+    textContent: name.trim().slice(0, 2).toUpperCase(),
+    style: `background:hsl(${hash} 32% 92%);color:hsl(${hash} 38% 30%)`,
+    ariaHidden: "true",
+  });
+}
+
+function folders() {
+  const counts = new Map();
+  for (const item of state.items) counts.set(item.folder, (counts.get(item.folder) || 0) + 1);
+  return [...counts].sort((a, b) => a[0].localeCompare(b[0]));
+}
+
+function visibleItems() {
+  const q = state.query.trim().toLowerCase();
+  return state.items.filter((item) =>
+    (state.view.type === "all" ||
+     (state.view.type === "low" && isLow(item)) ||
+     (state.view.type === "folder" && item.folder === state.view.folder)) &&
+    (!q || item.name.toLowerCase().includes(q) || item.folder.toLowerCase().includes(q)));
+}
+
+function setMessage(text, isError = false) {
   $("msg").textContent = text;
   $("msg").className = "msg" + (isError ? " error" : "");
 }
 
-function cell(text, className) {
-  const td = document.createElement("td");
-  td.textContent = text;  // textContent, never innerHTML: item names are user input
-  if (className) td.className = className;
-  return td;
+function renderSidebar() {
+  $("count-all").textContent = state.items.length;
+  $("count-low").textContent = state.items.filter(isLow).length;
+  const list = $("folders");
+  list.replaceChildren(...folders().map(([name, count]) => {
+    const btn = el("button", { className: "nav", type: "button" },
+      el("span", { className: "folder-icon", ariaHidden: "true" }),
+      el("span", { className: "label", textContent: name }),
+      el("span", { className: "count", textContent: count }));
+    btn.dataset.view = "folder";
+    btn.dataset.folder = name;
+    return btn;
+  }));
+  document.querySelectorAll(".sidebar .nav").forEach((btn) => {
+    const v = state.view;
+    const active = btn.dataset.view === v.type && (v.type !== "folder" || btn.dataset.folder === v.folder);
+    btn.setAttribute("aria-current", active ? "true" : "false");
+  });
+  $("folder-options").replaceChildren(...folders().map(([name]) => el("option", { value: name })));
 }
 
-function render(items, allItems) {
-  $("stat-total").textContent = allItems.length;
-  $("stat-low").textContent = allItems.filter((i) => i.quantity <= i.reorderLevel).length;
-  const rows = $("rows");
-  rows.replaceChildren();
-  $("empty").hidden = items.length > 0;
-  for (const item of items) {
-    const tr = document.createElement("tr");
-    const low = item.quantity <= item.reorderLevel;
-    tr.append(
-      cell(item.name),
-      cell(`${item.quantity} ${item.unit}`, "num"),
-      cell(`${item.reorderLevel} ${item.unit}`, "num"),
-    );
-    const status = document.createElement("td");
-    const badge = document.createElement("span");
-    badge.className = "badge " + (low ? "low" : "ok");
-    badge.textContent = low ? "Reorder" : "OK";
-    status.append(badge);
-    tr.append(status, cell(new Date(item.updatedAt).toLocaleString()));
+function renderCrumbs() {
+  const crumbs = $("crumbs");
+  const title = state.view.type === "low" ? "Low stock" : state.view.type === "folder" ? state.view.folder : null;
+  crumbs.replaceChildren(title ? "All items  ›  " : "", el("b", { textContent: title || "All items" }));
+}
 
-    const actions = document.createElement("td");
-    actions.className = "actions";
-    const edit = document.createElement("button");
-    edit.type = "button";
-    edit.textContent = "Edit";
-    edit.setAttribute("aria-label", `Edit ${item.name}`);
-    edit.onclick = () => openForm(item);
-    const del = document.createElement("button");
-    del.type = "button";
-    del.className = "danger";
-    del.textContent = "Delete";
-    del.setAttribute("aria-label", `Delete ${item.name}`);
-    del.onclick = () => removeItem(item);
-    actions.append(edit, del);
-    tr.append(actions);
-    rows.append(tr);
-  }
+function renderSummary(items) {
+  $("sum-folders").textContent = new Set(items.map((i) => i.folder)).size;
+  $("sum-items").textContent = items.length;
+  $("sum-qty").textContent = items.reduce((sum, i) => sum + i.quantity, 0).toLocaleString();
+  $("sum-low").textContent = items.filter(isLow).length;
+}
+
+function renderList(items) {
+  $("list").replaceChildren(...items.map((item) => {
+    const low = isLow(item);
+    const row = el("button", { className: "row", type: "button" },
+      thumb(item.name),
+      el("span", {}, el("div", { className: "name", textContent: item.name }), el("div", { className: "sub", textContent: item.folder })),
+      el("span", { className: "qty" }, `${item.quantity.toLocaleString()} `, el("small", { textContent: item.unit })),
+      el("span", { className: "status " + (low ? "low" : "ok"), textContent: low ? "Reorder" : "In stock" }));
+    row.setAttribute("aria-current", item.itemId === state.selectedId ? "true" : "false");
+    row.onclick = () => { state.selectedId = item.itemId; render(); };
+    return el("li", {}, row);
+  }));
+  const empty = $("empty");
+  empty.hidden = items.length > 0;
+  empty.textContent = state.items.length === 0 ? "No items yet. Use “Add item” to record your first stock line."
+    : state.query ? "No items match your search." : "Nothing here.";
+}
+
+function renderDetail() {
+  const item = state.items.find((i) => i.itemId === state.selectedId);
+  const panel = $("detail");
+  panel.hidden = !item;
+  $("content").classList.toggle("has-detail", Boolean(item));
+  if (!item) return;
+  const low = isLow(item);
+  const step = (delta, label) => {
+    const b = el("button", { type: "button", textContent: delta < 0 ? "−" : "+", ariaLabel: label });
+    b.disabled = item.quantity + delta < 0;
+    b.onclick = () => adjust(item, delta);
+    return b;
+  };
+  const closeBtn = el("button", { className: "close", type: "button", textContent: "×", ariaLabel: "Close details" });
+  closeBtn.onclick = () => { state.selectedId = null; render(); };
+  const editBtn = el("button", { className: "btn", type: "button", textContent: "Edit" });
+  editBtn.onclick = () => openForm(item);
+  const delBtn = el("button", { className: "btn danger", type: "button", textContent: "Delete" });
+  delBtn.onclick = () => removeItem(item);
+  panel.replaceChildren(
+    el("div", { className: "detail-head" }, thumb(item.name), closeBtn),
+    el("h2", { textContent: item.name }),
+    el("div", { className: "sub", textContent: `All items › ${item.folder}` }),
+    el("div", { className: "stock" },
+      el("div", { className: "stock-label", textContent: "Quantity on hand" }),
+      el("div", { className: "stock-row" },
+        el("div", { className: "stock-value" }, `${item.quantity.toLocaleString()} `, el("small", { textContent: item.unit })),
+        el("div", { className: "stepper" }, step(-1, "Remove one"), step(1, "Add one"))),
+      el("div", { className: "hint status " + (low ? "low" : "ok"),
+        textContent: low ? `At or below reorder level (${item.reorderLevel})` : `Above reorder level (${item.reorderLevel})` })),
+    el("dl", { className: "fields" },
+      el("dt", { textContent: "Folder" }), el("dd", { textContent: item.folder }),
+      el("dt", { textContent: "Unit" }), el("dd", { textContent: item.unit }),
+      el("dt", { textContent: "Reorder level" }), el("dd", { textContent: `${item.reorderLevel} ${item.unit}` }),
+      el("dt", { textContent: "Updated" }), el("dd", { textContent: new Date(item.updatedAt).toLocaleString() }),
+      el("dt", { textContent: "Created" }), el("dd", { textContent: new Date(item.createdAt).toLocaleString() }),
+      el("dt", { textContent: "Item ID" }), el("dd", { textContent: item.itemId })),
+    el("div", { className: "detail-actions" }, editBtn, delBtn));
+}
+
+function render() {
+  const items = visibleItems();
+  renderSidebar();
+  renderCrumbs();
+  renderSummary(state.view.type === "all" && !state.query ? state.items : items);
+  renderList(items);
+  renderDetail();
 }
 
 async function load() {
   try {
-    const all = await api("GET", "/items");
-    render($("low-only").checked ? all.filter((i) => i.quantity <= i.reorderLevel) : all, all);
+    state.items = await api("GET", "/items");
+    if (state.view.type === "folder" && !state.items.some((i) => i.folder === state.view.folder)) state.view = { type: "all" };
+    render();
   } catch (err) {
-    showMessage(`Could not load items: ${err.message}`, true);
+    setMessage(`Could not load items: ${err.message}`, true);
+  }
+}
+
+let adjusting = false;
+async function adjust(item, delta) {
+  if (adjusting) return;  // one change at a time, so fast clicks never send a stale quantity
+  adjusting = true;
+  document.querySelectorAll(".stepper button").forEach((b) => { b.disabled = true; });
+  try {
+    await api("PUT", `/items/${encodeURIComponent(item.itemId)}`, { ...toBody(item), quantity: item.quantity + delta });
+    await load();
+  } catch (err) {
+    setMessage(`Could not update quantity: ${err.message}`, true);
+    render();
+  } finally {
+    adjusting = false;
   }
 }
 
 function openForm(item) {
-  editingId = item ? item.itemId : null;
+  state.editingId = item ? item.itemId : null;
   $("dialog-title").textContent = item ? "Edit item" : "Add item";
   $("f-name").value = item ? item.name : "";
+  $("f-folder").value = item ? item.folder : (state.view.type === "folder" ? state.view.folder : "");
   $("f-quantity").value = item ? item.quantity : "";
   $("f-unit").value = item ? item.unit : "";
   $("f-reorder").value = item ? item.reorderLevel : "";
@@ -193,6 +375,7 @@ $("form").addEventListener("submit", async (event) => {
   const toInt = (v) => (v.trim() === "" ? NaN : Number(v));
   const body = {
     name: $("f-name").value,
+    folder: $("f-folder").value,
     quantity: toInt($("f-quantity").value),
     unit: $("f-unit").value,
     reorderLevel: toInt($("f-reorder").value),
@@ -202,13 +385,15 @@ $("form").addEventListener("submit", async (event) => {
     return;
   }
   try {
-    if (editingId) await api("PUT", `/items/${encodeURIComponent(editingId)}`, body);
-    else await api("POST", "/items", body);
+    const saved = state.editingId
+      ? await api("PUT", `/items/${encodeURIComponent(state.editingId)}`, body)
+      : await api("POST", "/items", body);
     $("dialog").close();
-    showMessage(`Saved “${body.name.trim()}”.`);
-    load();
+    state.selectedId = saved.itemId;
+    setMessage(`Saved “${saved.name}”.`);
+    await load();
   } catch (err) {
-    $("form-msg").textContent = err.message;  // server-side validation message
+    $("form-msg").textContent = err.message;
   }
 });
 
@@ -216,16 +401,24 @@ async function removeItem(item) {
   if (!confirm(`Delete “${item.name}”? This cannot be undone.`)) return;
   try {
     await api("DELETE", `/items/${encodeURIComponent(item.itemId)}`);
-    showMessage(`Deleted “${item.name}”.`);
-    load();
+    state.selectedId = null;
+    setMessage(`Deleted “${item.name}”.`);
+    await load();
   } catch (err) {
-    showMessage(`Could not delete: ${err.message}`, true);
+    setMessage(`Could not delete: ${err.message}`, true);
   }
 }
 
+document.querySelector(".sidebar").addEventListener("click", (event) => {
+  const btn = event.target.closest(".nav");
+  if (!btn) return;
+  state.view = btn.dataset.view === "folder" ? { type: "folder", folder: btn.dataset.folder } : { type: btn.dataset.view };
+  state.selectedId = null;
+  render();
+});
+$("search").addEventListener("input", (event) => { state.query = event.target.value; render(); });
 $("add-btn").onclick = () => openForm(null);
 $("cancel-btn").onclick = () => $("dialog").close();
-$("low-only").onchange = load;
 load();
 </script>
 </body>
