@@ -3,6 +3,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY app.py validation.py ./
+COPY static ./static
 # Run as a non-root user inside the container.
 RUN useradd --system --no-create-home appuser
 USER appuser

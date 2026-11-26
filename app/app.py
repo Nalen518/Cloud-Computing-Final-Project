@@ -4,7 +4,9 @@
   GET    /items/{itemId}  read one item    -> 200 / 404
   PUT    /items/{itemId}  update an item   -> 200 / 400 / 404
   DELETE /items/{itemId}  delete an item   -> 204 / 404
+  GET    /items           list items (?lowStock=true for low stock only) -> 200
   GET    /health          liveness check   -> 200
+  GET    /                web page (static/index.html)
 """
 import os
 import uuid
@@ -63,6 +65,11 @@ def body_or_400():
     return data, (jsonify(message=error), 400) if error else None
 
 
+@app.get("/")
+def index():
+    return app.send_static_file("index.html")
+
+
 @app.get("/health")
 def health():
     return jsonify(status="ok")
@@ -81,6 +88,17 @@ def create_item():
             (item_id, data["name"], data["quantity"], data["unit"], data["reorderLevel"], ts, ts),
         )
         return jsonify(to_json(fetch(cur, item_id))), 201
+
+
+@app.get("/items")
+def list_items():
+    # shortcut: no paging, capped at 500 rows; add paging if a business tracks more lines than that.
+    sql = "SELECT * FROM items"
+    if request.args.get("lowStock") == "true":
+        sql += " WHERE quantity <= reorder_level"
+    with db() as conn, conn.cursor() as cur:
+        cur.execute(sql + " ORDER BY name LIMIT 500")
+        return jsonify([to_json(row) for row in cur.fetchall()])
 
 
 @app.get("/items/<item_id>")
