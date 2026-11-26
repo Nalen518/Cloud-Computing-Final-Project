@@ -9,7 +9,7 @@ Small businesses in Indonesia have adopted digital payments faster than digital 
 A business that sells physical goods needs to know what it holds and when to reorder. Many small businesses still record this on paper or in a spreadsheet. The proposed system lets an owner or staff member create, read, update and delete stock items, each with a quantity and a reorder level.
 
 - **Primary user:** the owner of a small business (retail, café ingredients, home-based food) who currently tracks stock manually.
-- **Scope:** one entity (`Item`), four CRUD endpoints, and no user interface at this stage.
+- **Scope:** one entity (`Item`), four CRUD endpoints, and a simple web page for the owner that uses the same API.
 - **Out of scope (future work):** low-stock alerts, multi-user accounts and barcode scanning.
 
 ## 2. Problem evidence and its limitations
@@ -62,7 +62,7 @@ Four endpoints provide create, read, update and delete for `Item`. All use the `
 | Update | `PUT /items/{itemId}` | `name`, `quantity`, `unit`, `reorderLevel` | `200` with the updated item | `400` invalid field; `404` unknown `itemId` |
 | Delete | `DELETE /items/{itemId}` | None | `204` no content | `404` unknown `itemId` |
 
-A separate `GET /health` endpoint returns `200` and is used for connectivity tests. A possible extension, not counted among the four, is `GET /items?lowStock=true`, which would list items at or below their reorder level with a single SQL `WHERE` clause.
+Three supporting routes are not counted among the four: `GET /items` lists items, and `GET /items?lowStock=true` lists only those at or below their reorder level using a single SQL `WHERE` clause; `GET /health` returns `200` for connectivity tests; and `GET /` serves the web page. The page is plain HTML and JavaScript served by the `api` container, so it adds no extra service, and it renders item names as text to prevent script injection.
 
 ## 6. Architecture, data flow and security
 
@@ -143,5 +143,6 @@ evidence/            AWS screenshots and test outputs
 - [ ] Security group inbound rules
 - [ ] EC2 instance running, showing the instance type and `LabInstanceProfile`
 - [ ] `docker compose ps` on the instance showing both services running
-- [ ] `test_api.sh` output from the laptop: 9 passed, 0 failed
+- [ ] `test_api.sh` output from the laptop: 11 passed, 0 failed
+- [ ] Web page opened at the instance address, listing items
 - [ ] Account ID hidden in every screenshot; no passwords visible

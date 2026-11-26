@@ -24,7 +24,11 @@ Both run on one EC2 instance with Docker Compose ([`docker-compose.yml`](docker-
 | Update | `PUT /items/{itemId}` | `200` | `400`, `404` |
 | Delete | `DELETE /items/{itemId}` | `204` | `404` |
 
-`GET /health` returns `200` for connectivity checks. Full details are in the [design brief](docs/design-brief.md).
+Also: `GET /items` lists items (`?lowStock=true` for those at or below their reorder level), `GET /health` returns `200` for connectivity checks, and `GET /` serves the web page. Full details are in the [design brief](docs/design-brief.md).
+
+## Web page
+
+Opening the server address in a browser shows a single-page stock list served by the `api` container ([`app/static/index.html`](app/static/index.html)): add, edit and delete items, a "Reorder" badge for low stock, and a low-stock filter. It uses the same API, so it needs no extra service.
 
 ## Run locally
 
@@ -38,7 +42,7 @@ docker compose up -d --build
 Then, in Git Bash:
 
 ```bash
-API_URL=http://localhost bash scripts/test_api.sh   # expects 9 passed, 0 failed
+API_URL=http://localhost bash scripts/test_api.sh   # expects 11 passed, 0 failed
 python -m unittest discover -s tests                # validation unit tests
 docker compose down
 ```
@@ -78,7 +82,7 @@ Region `us-east-1`, AWS Academy lab account. Each step produces evidence for `ev
 5. **Test** from your laptop (Git Bash):
 
    ```bash
-   API_URL=http://<instance public IP> bash scripts/test_api.sh   # expects 9 passed, 0 failed
+   API_URL=http://<instance public IP> bash scripts/test_api.sh   # expects 11 passed, 0 failed
    ```
 
 6. **Cost control:** stop the instance after each session (about $0.03 per hour while running). After grading, terminate it and delete the ECR repository.
@@ -86,7 +90,7 @@ Region `us-east-1`, AWS Academy lab account. Each step produces evidence for `ev
 ## Status
 
 - [x] Use case and data entity
-- [x] API image, Docker Compose, tests (passing locally: 9/9 API checks)
+- [x] API image, Docker Compose, tests (passing locally: 11/11 API checks)
 - [x] Design brief and architecture diagram (Track B)
 - [x] Deployment script and plan
 - [ ] Deployed to EC2 with the image in ECR
