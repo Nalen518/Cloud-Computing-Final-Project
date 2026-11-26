@@ -28,7 +28,13 @@ Also: `GET /items` lists items (`?lowStock=true` for those at or below their reo
 
 ## Web page
 
-Opening the server address in a browser shows a single-page stock list served by the `api` container ([`app/static/index.html`](app/static/index.html)): add, edit and delete items, a "Reorder" badge for low stock, and a low-stock filter. It uses the same API, so it needs no extra service.
+Opening the server address in a browser shows a folder-based stock directory served by the `api` container ([`app/static/index.html`](app/static/index.html)), modelled on small-business inventory apps such as Sortly:
+
+- **Sidebar:** All items, Low stock, and one entry per folder (for example Kitchen, Packaging), each with a count.
+- **Summary bar:** folders, items, total quantity and how many items need reordering in the current view.
+- **Item list** with search, and a **detail panel** with −/+ buttons for quick stock adjustments, plus edit and delete.
+
+It uses the same API, so it needs no extra service. Each item has an optional `folder` (default `Unsorted`).
 
 ## Run locally
 
