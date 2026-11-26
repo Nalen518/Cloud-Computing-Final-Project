@@ -1,63 +1,59 @@
-# Week 12 Design Brief: Small Business Stock Tracker (Track C Serverless)
+# Week 12 Design Brief: Small Business Stock Tracker (Track B: Containers)
 
-Nov 25, 2026 · @Apa
+AWS Cloud Computing · Individual Project · 26 November 2026
 
-## 1. Context and use case
+## 1. Introduction and use case
 
-Small businesses in Indonesia are digitising their payments faster than their stock records, and this project builds a minimal serverless stock tracker to close that gap.
+Small businesses in Indonesia have adopted digital payments faster than digital stock records. This project addresses that gap with a small cloud-hosted REST API for tracking stock.
 
-A small business that sells physical goods needs to know what it holds and when to reorder. Many still track this on paper or in a spreadsheet. This project proposes a small cloud API where an owner or staff member creates, reads, updates and deletes stock items, each with a quantity and a reorder level.
+A business that sells physical goods needs to know what it holds and when to reorder. Many small businesses still record this on paper or in a spreadsheet. The proposed system lets an owner or staff member create, read, update and delete stock items, each with a quantity and a reorder level.
 
-- **Primary user:** the owner of a small business (retail, café ingredients, home-based food) who tracks stock manually today.
-- **Scope:** one entity (`Item`), four CRUD endpoints, no user interface required for this stage.
-- **Out of scope (future work):** low-stock alerts, multi-user accounts, barcode scanning.
+- **Primary user:** the owner of a small business (retail, café ingredients, home-based food) who currently tracks stock manually.
+- **Scope:** one entity (`Item`), four CRUD endpoints, and no user interface at this stage.
+- **Out of scope (future work):** low-stock alerts, multi-user accounts and barcode scanning.
 
-## 2. Why this problem: evidence and its limits
+## 2. Problem evidence and its limitations
 
-The evidence shows that small businesses matter, that their payments are digital, and that record-keeping is a recognised gap; it does not directly measure stock-keeping in Indonesia.
+The evidence below shows that small businesses are economically significant, that their payments are already digital, and that record-keeping is a recognised gap. It does not directly measure stock-keeping practice in Indonesia.
 
-| Evidence | Source | What it supports | Limit |
+| Evidence | Source | What it supports | Limitation |
 | --- | --- | --- | --- |
-| Small businesses: 60.5% of GDP, 97% of employment, 99.7% of businesses are micro | [Katadata, 14 Oct 2026](https://katadata.co.id/finansial/makro/6acebf857b24d/umkm-sumbang-60-5-pdb-tetapi-99-7-usahanya-masih-mikro) | The user group is large and economically important | Government-stated figures reported by the press |
+| Small businesses: 60.5% of GDP, 97% of employment; 99.7% of businesses are micro | [Katadata, 14 Oct 2026](https://katadata.co.id/finansial/makro/6acebf857b24d/umkm-sumbang-60-5-pdb-tetapi-99-7-usahanya-masih-mikro) | The user group is large and economically important | Government figures reported by the press |
 | QRIS: 44.86 million merchants, about 96.68% of them small businesses (Bank Indonesia, June 2026) | [Kontan, 7 Sep 2026](https://industri.kontan.co.id/news/transaksi-makin-digital-ini-strategi-pemerintah-dongkrak-bisnis-umkm) | Payments are already digital | Says nothing about stock records |
 | Business record-keeping listed among the challenges still facing small businesses | [Kontan, 7 Sep 2026](https://industri.kontan.co.id/news/transaksi-makin-digital-ini-strategi-pemerintah-dongkrak-bisnis-umkm) | Records are a recognised gap | A qualitative list, not a measurement |
-| 200 US small retailers (June 2025): 57% rely on manual inventory counts; 23% learn of a stockout only when a customer tries to buy | [Global Payments retail inventory report](https://www.globalpayments.com/insights/unpacking-the-truth-about-retail-inventory-report) | Manual counting causes stockouts that are found late | Vendor-sponsored, US-only, small sample: indicative only |
+| 200 US small retailers (June 2025): 57% rely on manual inventory counts; 23% learn of a stockout only when a customer tries to buy | [Global Payments retail inventory report](https://www.globalpayments.com/insights/unpacking-the-truth-about-retail-inventory-report) | Manual counting leads to stockouts that are discovered late | Vendor-sponsored, US-only, small sample; indicative only |
 
-**Limitation stated openly:** the stockout figures come from a US vendor survey, so this brief treats them as a mechanism that is plausible for Indonesian small businesses, not as a measured Indonesian rate.
+Because the stockout figures come from a US vendor survey, this report treats them as a plausible mechanism for Indonesian small businesses rather than as a measured Indonesian rate.
 
-## 3. Chosen track: C (Serverless)
+## 3. Track selection: B (Containers)
 
-I decided to choose Track C, which is Serverless. It fits because a small business stock tracker has low, bursty traffic, which is where pay-per-request pricing is easiest to defend.
+Track B (EC2 + Docker + ECR) was selected. The design initially followed Track C (Serverless), because a stock tracker has low, bursty traffic that suits pay-per-request pricing. However, the AWS Academy lab account provided for this course (Lab Project: Microservices and CI/CD Pipeline Builder) denies `dynamodb:CreateTable` and does not allow AWS CloudShell, so a serverless build cannot be deployed there. The lab does permit creating ECR repositories, EC2 instances and security groups, which are the building blocks of Track B.
 
-A 2025 study of serverless for small and medium enterprises reports [47-62% potential cost savings for variable workloads, but VMs 12-18% cheaper for sustained load](https://www.ebsco.com/articles/computer-science/78cf2c94-dc30-589f-b9ad-6b7114a5a017/serverless-architectures-for-scalable-and-cost-efficient-information-systems-in-smes), with cold starts affecting 5.7% of invocations at about 1.4 s latency. Treat these as one study's findings, not guarantees.
-
-| Track | Pros for this project | Cons for this project |
+| Track | Advantages for this project | Disadvantages for this project |
 | --- | --- | --- |
-| A: EC2 + RDS MySQL | Familiar SQL model; easy to reason about | Always-on server and database cost for a near-idle workload; more patching and network setup |
-| B: EC2 + Docker + ECR | Portable, reproducible packaging | Two services plus image build is more setup than a one-entity API needs |
-| **C: API Gateway + Lambda + DynamoDB** | Pay per request; no server to manage; smallest setup for one entity and four endpoints | Cold-start delay on first call; AWS lock-in; limited local testing |
+| A: EC2 + RDS MySQL | Familiar relational model | An always-on managed database adds cost and network setup for a near-idle workload |
+| **B: EC2 + Docker + ECR** | **Supported by the lab account; packaging is portable and reproducible; the same containers run on a laptop and on EC2** | **One server to manage and patch; it is billed per hour even when idle** |
+| C: API Gateway + Lambda + DynamoDB | Pay per request; no server to manage | Blocked in the lab account (`dynamodb:CreateTable` denied) |
 
-**Decision: Track C.** The cold-start cost is acceptable for a stock lookup that a person triggers occasionally.
+**Decision: Track B.** The hourly cost is controlled by stopping the instance between sessions (see the cost estimate in the Appendix).
 
 ## 4. Data entity: Item
 
-One DynamoDB table, `SmallBusinessItems`, holds one `Item` per stock line, keyed by `itemId`.
+Each stock line is one row in the MySQL table `items`, keyed by `item_id`. The API exposes the columns in camelCase.
 
-| Attribute | Type | Required | Notes |
+| API field | Column (MySQL type) | Required | Notes |
 | --- | --- | --- | --- |
-| `itemId` | String (partition key) | Server-set | UUID generated by the Lambda on create |
-| `name` | String | Yes | Product or ingredient name |
-| `quantity` | Number | Yes | Whole number, 0 or more |
-| `unit` | String | Yes | For example `pcs`, `kg`, `box` |
-| `reorderLevel` | Number | Yes | Whole number, 0 or more; an item is low stock when `quantity` is at or below this value |
-| `createdAt` | String | Server-set | ISO 8601 UTC timestamp |
-| `updatedAt` | String | Server-set | ISO 8601 UTC timestamp, changed on every update |
-
-**Capacity mode: on-demand.** Pro: no capacity planning for an unpredictable, low workload. Con: costs more per request than provisioned capacity if traffic ever becomes steady and high.
+| `itemId` | `item_id` (CHAR(36), primary key) | Server-set | UUID generated by the API on create |
+| `name` | `name` (VARCHAR(100)) | Yes | Product or ingredient name |
+| `quantity` | `quantity` (INT UNSIGNED) | Yes | Whole number, 0 or more |
+| `unit` | `unit` (VARCHAR(20)) | Yes | For example `pcs`, `kg`, `box` |
+| `reorderLevel` | `reorder_level` (INT UNSIGNED) | Yes | An item is low on stock when `quantity` is at or below this value |
+| `createdAt` | `created_at` (DATETIME, UTC) | Server-set | Returned in ISO 8601 format |
+| `updatedAt` | `updated_at` (DATETIME, UTC) | Server-set | Updated on every change |
 
 ## 5. CRUD endpoints
 
-Four endpoints cover create, read, update and delete for `Item`, all under the `/items` path and all returning JSON.
+Four endpoints provide create, read, update and delete for `Item`. All use the `/items` path and return JSON.
 
 | Operation | Method and path | Request body | Success | Errors |
 | --- | --- | --- | --- | --- |
@@ -66,92 +62,86 @@ Four endpoints cover create, read, update and delete for `Item`, all under the `
 | Update | `PUT /items/{itemId}` | `name`, `quantity`, `unit`, `reorderLevel` | `200` with the updated item | `400` invalid field; `404` unknown `itemId` |
 | Delete | `DELETE /items/{itemId}` | None | `204` no content | `404` unknown `itemId` |
 
-**Stretch, not counted in the four:** `GET /items?lowStock=true` lists items at or below their reorder level, which is what makes the stockout story visible. Pro: directly demonstrates the use case. Con: it uses a table scan, which gets slower and costlier as the table grows, so it is acceptable only at this scale.
+A separate `GET /health` endpoint returns `200` and is used for connectivity tests. A possible extension, not counted among the four, is `GET /items?lowStock=true`, which would list items at or below their reorder level with a single SQL `WHERE` clause.
 
 ## 6. Architecture, data flow and security
 
-A client calls API Gateway over HTTPS, which invokes one Lambda function that reads and writes a DynamoDB table, all under the existing LabRole and with no VPC.
+The system runs as two containers on a single EC2 instance in the default VPC. The API image is built from the repository and stored in Amazon ECR.
 
-![Architecture: client, API Gateway, Lambda, DynamoDB, with LabRole and CloudWatch Logs](architecture.drawio.png)
+![Architecture: client, security group, EC2 with api and db containers, ECR and IAM instance profile](architecture.drawio.png)
 
-Each request follows the solid arrows left to right and returns the same way; the dashed arrows show the role Lambda runs as and the logs it writes.
+**Services**
+
+- **`api`** (built image, stored in ECR as `items-api`): a Python Flask application served by gunicorn. It validates input and runs SQL against the database.
+- **`db`** (official `mysql:8.4` image): stores the `items` table in a Docker volume on the instance's EBS disk. It is reachable only from the `api` container over the private Docker network.
+
+**Data flow.** A client sends an HTTP request to the instance's public IP on port 80. The security group admits it only from the administrator's IP address. Docker forwards port 80 to the `api` container, which validates the request and queries the `db` container. The response returns along the same path as JSON with the appropriate status code.
 
 **Security and IAM, with trade-offs**
 
-- **IAM role.** The AWS Academy lab environment (Lab Project: Microservices and CI/CD Pipeline Builder) limits IAM, so Lambda runs as the preset LabRole instead of a custom role (to be confirmed in the lab console, see the AWS evidence checklist in the Appendix). Pro: nothing to create or maintain. Con: LabRole is broader than least privilege; a real deployment would use a role limited to this table and to log writes.
-- **Network.** No VPC: the managed services are reached over HTTPS. Pro: no NAT or subnet setup. Con: no network-level isolation, which is acceptable here because the data is only stock counts.
-- **API protection.** An API key with a usage plan and throttling on the stage. Pro: cheap control against abuse. Con: a key identifies a caller but is not user authentication, so real sign-in (for example Amazon Cognito) is future work.
-- **Data protection.** API Gateway endpoints use HTTPS and DynamoDB encrypts data at rest by default.
+- **IAM.** The instance uses the lab's preset `LabInstanceProfile` (role `LabRole`) to push and pull images in ECR, so no access keys are stored on the server or in Git. *Advantage:* no long-lived credentials. *Disadvantage:* `LabRole` is broader than least privilege; a production setup would use a role limited to this repository.
+- **Network.** The security group `items-api-sg` allows inbound HTTP (80) only from the administrator's IP and SSH (22) only from the EC2 Instance Connect address range. MySQL (3306) is not published outside Docker. *Advantage:* a small attack surface. *Disadvantage:* changing networks requires updating the rule.
+- **Transport.** Traffic is plain HTTP because the project has no domain or certificate. HTTPS through an Application Load Balancer with AWS Certificate Manager is future work.
+- **Secrets.** Database passwords live in a `.env` file on the instance, which Git ignores; only `.env.example` is committed. AWS Secrets Manager is the production alternative.
+- **Containers.** The `api` container runs as a non-root user, and the instance's EBS volume is encrypted at launch.
 
 ## 7. Design decisions and trade-offs
 
-Four choices shape the build, each picked to keep the Week 12 scope small and the setup low-risk in a restricted account.
-
-| Decision | Chosen | Pros | Cons and alternative |
+| Decision | Chosen | Advantages | Disadvantages and alternative |
 | --- | --- | --- | --- |
-| Lambda layout | One function (`items-handler`) routing by method | One thing to deploy, test and screenshot | Larger blast radius for a bug; one function per route gives finer permissions and metrics |
-| API type | API Gateway REST API | Supports API keys and usage plans, used for throttling here | Typically costs more per request than the HTTP API type, which lacks usage plans |
-| Database | DynamoDB, key-value by `itemId` | Matches access by id; no server; no schema migration | Ad-hoc queries and reports are harder than SQL; the low-stock list needs a scan |
-| Deployment method | Console plus AWS CLI scripts kept in the repo | Lowest risk in a restricted lab account; every step is repeatable from the scripts | More manual than infrastructure as code; CloudFormation or SAM is the next step if the lab allows it |
+| Orchestration | Docker Compose on one EC2 instance | Simplest way to run two services; identical locally and on AWS | No automatic scaling or self-healing across hosts; Amazon ECS is the next step |
+| Database | MySQL in a container with a volume | No extra managed service or cost; data survives restarts | Backups and patching are manual, and data lives on one instance; Amazon RDS is the production alternative |
+| Image build | Built on the EC2 instance and pushed to ECR | Needs no Docker on the developer's laptop or CI service | Manual step; AWS CodeBuild or CodePipeline would automate it |
+| Instance type | `t3.small` (2 GB memory) | Enough memory for MySQL 8 and the image build | About twice the cost of `t3.micro`, which has only 1 GB |
 
-## Appendix (outside the 2-page brief): deployment plan, repo and evidence
+## Appendix (outside the 2-page brief)
 
-The build runs in seven steps and each step produces one piece of evidence for the submission.
+### A. Deployment plan
 
-**Deployment plan**
+1. Start the lab session and confirm the region (`us-east-1`).
+2. Create the ECR repository `items-api` and the security group `items-api-sg` (HTTP 80 from the administrator's IP; SSH 22 from the EC2 Instance Connect range).
+3. Launch the EC2 instance `items-api-host` (Amazon Linux 2023, `t3.small`, public IP, `items-api-sg`, `LabInstanceProfile`, encrypted 8 GB gp3 volume).
+4. Connect with EC2 Instance Connect, then install Docker, Docker Compose and Git.
+5. Clone the repository, build the `api` image, and push it to ECR.
+6. Create `.env` from `.env.example`, then start both services with `docker compose up -d`.
+7. Run `scripts/test_api.sh` from a laptop against the public IP and save the output.
 
-1. Start the AWS Academy lab session, open the console and note the region.
-2. Create the DynamoDB table `SmallBusinessItems` (partition key `itemId`, String, on-demand).
-3. Create the Lambda function `items-handler` with LabRole as its execution role and the table name as an environment variable.
-4. Create the REST API with `/items` and `/items/{itemId}`, the four methods, and Lambda proxy integration; deploy it to a stage.
-5. Create an API key and a usage plan with throttling, and attach them to the stage.
-6. Call each endpoint with `curl` and save the outputs.
-7. Open CloudWatch Logs and confirm the requests were logged.
+### B. Cost estimate
 
-**Cost estimate**
+The lab budget is $40. Unlike the serverless design, Track B is billed by the hour while the instance runs, so stopping the instance between sessions is the main cost control.
 
-The lab budget is $40, and the three services cost about one cent at project scale, so the budget risk is idle hourly resources, not requests.
+Assumptions: `us-east-1` list prices, no free tier, `t3.small`, 8 GB gp3 disk, one public IPv4 address. Prices should be confirmed in the [AWS Pricing Calculator](https://calculator.aws/).
 
-Assumptions: us-east-1 list prices, no free tier, Lambda at 128 MB and about 300 ms per call, items about 1 KB, half of calls are writes. Prices to be confirmed in the [AWS Pricing Calculator](https://calculator.aws/).
-
-| Service | Unit price | Project use (~2,000 calls) | Worst case (100,000 calls) |
+| Item | Unit price | Project use (about 20 running hours) | Left running for 30 days |
 | --- | --- | --- | --- |
-| API Gateway (REST) | $3.50 per million requests | $0.007 | $0.35 |
-| Lambda | $0.20 per million requests + $0.0000166667 per GB-second | $0.002 | $0.08 |
-| DynamoDB (on-demand) | $0.625 per million writes, $0.125 per million reads | $0.001 | $0.04 |
-| CloudWatch Logs | $0.50 per GB ingested | $0.002 | $0.10 |
-| **Total** | | **≈ $0.01** | **≈ $0.57** |
+| EC2 `t3.small` | $0.0208 per hour | $0.42 | $15.18 |
+| Public IPv4 address | $0.005 per hour (only while running) | $0.10 | $3.65 |
+| EBS gp3, 8 GB | $0.08 per GB-month | $0.64 per month, also while stopped | $0.64 |
+| ECR storage (image about 0.2 GB) | $0.10 per GB-month | $0.02 | $0.02 |
+| **Total** | | **≈ $1.20** | **≈ $19.50** |
 
-API keys and usage plans have no charge. Cost controls: leave API Gateway caching and Lambda provisioned concurrency off (both bill hourly), keep DynamoDB on-demand without point-in-time recovery or backups, stop any lab-created EC2, RDS or IDE instances between sessions, check the spent amount in the lab panel after each session, and delete the table, function and API after grading.
+Cost controls: stop the instance after each session (its public IP changes on restart), check the spent amount in the lab panel, and after grading terminate the instance and delete the ECR repository.
 
-**Repository layout**
+### C. Repository layout
 
 ```
-small-business-stock-tracker/
-  README.md
-  docs/            design brief and architecture diagram
-  src/items_handler/lambda_function.py
-  scripts/         create_table.sh, test_api.sh
-  evidence/        screenshots and curl outputs
+README.md
+docker-compose.yml   the two services
+.env.example         settings template (.env is not committed)
+app/                 items-api: app.py, validation.py, Dockerfile, requirements.txt
+db/init.sql          creates the items table
+tests/               validation unit tests
+scripts/test_api.sh  end-to-end API test; saves output to evidence/
+docs/                design brief and architecture diagram
+evidence/            AWS screenshots and test outputs
 ```
 
-**Progressive commits (planned order)**
+### D. AWS evidence checklist
 
-1. `docs: add README and design brief`
-2. `docs: add architecture diagram`
-3. `infra: add DynamoDB table script`
-4. `feat: handler for create and read`
-5. `feat: handler for update and delete`
-6. `test: add API test script`
-7. `docs: add AWS evidence`
-
-**AWS evidence checklist**
-
-- [ ] Console open in the AWS Academy lab, region visible
-- [ ] LabRole selectable as the Lambda execution role (confirms the IAM assumption in section 6)
-- [ ] DynamoDB table showing Active
-- [ ] Lambda function page showing the role and the environment variable
-- [ ] API Gateway resources and methods, plus the stage invoke URL
-- [ ] `curl` outputs: create returns 201, read 200, update 200, delete 204, read after delete 404
-- [ ] A CloudWatch log entry from one request
-- [ ] API key and account ID hidden in every screenshot
+- [ ] Console with the region visible
+- [ ] ECR repository `items-api` with the pushed image
+- [ ] Security group inbound rules
+- [ ] EC2 instance running, showing the instance type and `LabInstanceProfile`
+- [ ] `docker compose ps` on the instance showing both services running
+- [ ] `test_api.sh` output from the laptop: 9 passed, 0 failed
+- [ ] Account ID hidden in every screenshot; no passwords visible
