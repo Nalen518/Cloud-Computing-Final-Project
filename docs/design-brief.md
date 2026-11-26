@@ -27,7 +27,7 @@ The evidence shows that small businesses matter, that their payments are digital
 
 ## 3. Chosen track: C (Serverless)
 
-Track C fits because a small business stock tracker has low, bursty traffic, which is where pay-per-request pricing is easiest to defend.
+I decided to choose Track C, which is Serverless. It fits because a small business stock tracker has low, bursty traffic, which is where pay-per-request pricing is easiest to defend.
 
 A 2025 study of serverless for small and medium enterprises reports [47-62% potential cost savings for variable workloads, but VMs 12-18% cheaper for sustained load](https://www.ebsco.com/articles/computer-science/78cf2c94-dc30-589f-b9ad-6b7114a5a017/serverless-architectures-for-scalable-and-cost-efficient-information-systems-in-smes), with cold starts affecting 5.7% of invocations at about 1.4 s latency. Treat these as one study's findings, not guarantees.
 
